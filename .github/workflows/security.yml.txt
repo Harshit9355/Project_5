@@ -1,0 +1,89 @@
+name: AI Security Gates
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+
+  gate1-bandit:
+    name: Gate 1 - Bandit SAST
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Bandit
+        run: pip install bandit
+
+      - name: Run Bandit
+        run: bandit -r . --severity-level high
+
+
+  gate2-safety:
+    name: Gate 2 - Safety Dependency Scan
+    needs: gate1-bandit
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Safety
+        run: pip install "safety<3"
+
+      - name: Run Safety
+        run: safety check -r requirements.txt
+
+
+  gate3-gitleaks:
+    name: Gate 3 - Gitleaks Secret Detection
+    needs: gate2-safety
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout full repository history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+  gate4-prompt-injection:
+    name: Gate 4 - Custom Prompt Injection Scanner
+    needs: gate3-gitleaks
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run custom prompt injection scanner
+        run: python inject_scanner.py
