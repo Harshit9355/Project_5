@@ -43,12 +43,26 @@ def index():
 @app.get("/health")
 def health():
     try:
-        response = requests.get(f"{OLLAMA_URL.rstrip('/')}/api/tags", timeout=5)
+        response = requests.get(
+            f"{OLLAMA_URL.rstrip('/')}/api/tags",
+            timeout=5
+        )
         response.raise_for_status()
-        models = [item.get("name") for item in response.json().get("models", [])]
-        return jsonify({"status": "ok", "ollama": "reachable", "models": models})
+        models = [
+            item.get("name")
+            for item in response.json().get("models", [])
+        ]
+        return jsonify({
+            "status": "ok",
+            "ollama": "reachable",
+            "models": models
+        })
     except requests.RequestException as error:
-        return jsonify({"status": "degraded", "ollama": "unreachable", "error": str(error)}), 503
+        return jsonify({
+            "status": "degraded",
+            "ollama": "unreachable",
+            "error": str(error)
+        }), 503
 
 
 @app.post("/chat")
@@ -57,9 +71,12 @@ def chat():
     message = body.get("message")
 
     if not isinstance(message, str) or not message.strip():
-        return jsonify({"error": "A non-empty message is required."}), 400
+        return jsonify({
+            "error": "A non-empty message is required."
+        }), 400
 
     started = datetime.now(timezone.utc)
+
     try:
         answer = ask_ollama(message)
     except requests.RequestException as error:
@@ -74,6 +91,17 @@ def chat():
         "timestamp": started.isoformat(),
         "baseline": "intentionally vulnerable",
     })
+
+
+def deliberate_bandit_failure(user_input):
+    import subprocess
+
+    subprocess.Popen(
+        "echo " + user_input,
+        shell=True
+    )
+
+    return eval("1 + 1")
 
 
 if __name__ == "__main__":
