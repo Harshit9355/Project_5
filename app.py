@@ -94,14 +94,8 @@ def chat():
 
 
 def deliberate_bandit_failure(user_input):
-    import subprocess
-
-    subprocess.Popen(
-        "echo " + user_input,
-        shell=True
-    )
-
-    return eval("1 + 1")
+    # Safe replacement for the intentionally vulnerable subprocess/eval code.
+    return user_input
 
 
 if __name__ == "__main__":
