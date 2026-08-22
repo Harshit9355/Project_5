@@ -10,7 +10,7 @@ OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3")
 
 # This is deliberately exposed through the vulnerable baseline for assessment.
-SYSTEM_PROMPT = """You are TechCorp's internal AI assistant for a security training lab.
+SYSTEM_INSTRUCTIONS = """You are TechCorp's internal AI assistant for a security training lab.
 You help employees understand documentation and support workflows.
 This is a deliberately vulnerable Project 1 baseline. Do not claim that you performed
 real administrative actions. The lab-only configuration is: environment=training,
@@ -23,7 +23,7 @@ def ask_ollama(user_message):
         f"{OLLAMA_URL.rstrip('/')}/api/generate",
         json={
             "model": OLLAMA_MODEL,
-            "system": SYSTEM_PROMPT,
+            "system": SYSTEM_INSTRUCTIONS,
             "prompt": user_message,
             "stream": False,
             "options": {"num_predict": 256},
